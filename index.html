@@ -86,10 +86,10 @@ else if(hole.length===3)h.absarc(hole[0]*S,hole[1]*S,hole[2]*S,0,PI*2,true);
 else{h.moveTo(hole[0]*S,hole[1]*S);h.lineTo(hole[0]*S,hole[3]*S);h.lineTo(hole[2]*S,hole[3]*S);h.lineTo(hole[2]*S,hole[1]*S);h.lineTo(hole[0]*S,hole[1]*S)}s.holes.push(h)}
 const g=dep?new THREE.ExtrudeGeometry(s,{depth:dep,bevelEnabled:false}):new THREE.ShapeGeometry(s);
 g.rotateX(PI/2);const mt=typeof c==='number'?M(c):c.clone();mt.side=THREE.DoubleSide;if(c===mCotto)floorMats.push(mt);const o=new THREE.Mesh(g,mt);o.position.y=y;cur.add(o)}
-function arch(x,y1,y2,a,b,vs,rus,glz){
+function arch(x,y1,y2,a,b,vs,rus,glz,dr){
 const L=(y2-y1)*S,t=.12,r=(b-a)/2,cx=(a+b)/2,d=rus?.16:.08,dep=t+.1;
 const sh=new THREE.Shape();sh.moveTo(0,0);sh.lineTo(L,0);sh.lineTo(L,H);sh.lineTo(0,H);sh.lineTo(0,0);
-const ho=new THREE.Shape();ho.moveTo(a,0);ho.lineTo(a,vs);ho.absarc(cx,vs,r,PI,0,true);ho.lineTo(b,0);ho.lineTo(a,0);sh.holes.push(ho);
+const ho=new THREE.Shape();ho.moveTo(a,0);ho.lineTo(a,vs);ho.absarc(cx,vs,r,PI,0,true);ho.lineTo(b,0);ho.lineTo(a,0);sh.holes.push(ho);if(dr){const hd=new THREE.Shape();hd.moveTo(dr[0],0);hd.lineTo(dr[0],2.2);hd.lineTo(dr[1],2.2);hd.lineTo(dr[1],0);hd.lineTo(dr[0],0);sh.holes.push(hd)}
 const grp=new THREE.Group();grp.add(new THREE.Mesh(new THREE.ExtrudeGeometry(sh,{depth:t,bevelEnabled:false}),mWall));
 const c1=rus?0xcaa77a:0xece5d8,c2=rus?0xb08d62:0xece5d8;
 const st=(w,h,px,py,rot,c)=>{const o=new THREE.Mesh(new THREE.BoxGeometry(w,h,dep),M(c));o.position.set(px,py,t/2);o.rotation.z=rot;grp.add(o)};
@@ -99,7 +99,7 @@ const n=Math.round(vs/(rus?.3:.5));
 for(let i=0;i<n;i++)[a-d/2,b+d/2].forEach((px,j)=>{const o=(i+j)%2;st(d*(rus&&o?1.3:1),vs/n*(rus?.92:1.01),px,(i+.5)*vs/n,0,o?c2:c1)});
 if(!rus||glz){const gl=new THREE.Mesh(new THREE.ShapeGeometry(ho),mGlass);gl.material.side=THREE.DoubleSide;gl.position.z=t/2;grp.add(gl);
 st(.04,vs+r,cx,(vs+r)/2,0,0x2f3033);st(b-a,.04,cx,vs,0,0x2f3033)}
-grp.rotation.y=-PI/2;grp.position.set(m(x)+t/2,0,m(y1));w4.add(grp)}
+grp.rotation.y=-PI/2;grp.position.set(m(x)+t/2,0,m(y1));w4.add(grp);return grp}
 const mCotto=(()=>{try{const c=document.createElement('canvas');c.width=c.height=540;const x=c.getContext('2d');x.fillStyle='#d9cfbd';x.fillRect(0,0,540,540);
 for(let i=0;i<6;i++)for(let j=0;j<6;j++){x.fillStyle='hsl('+(26+Math.random()*8)+','+(22+Math.random()*10)+'%,'+(39+Math.random()*12)+'%)';x.fillRect(i*90+2,j*90+2,86,86);for(let n=0;n<90;n++){x.fillStyle='rgba(60,45,30,'+Math.random()*.13+')';x.fillRect(i*90+2+Math.random()*84,j*90+2+Math.random()*84,3,3)}}
 const t=new THREE.CanvasTexture(c);t.wrapS=t.wrapT=THREE.RepeatWrapping;t.repeat.set(1/1.8,1/1.8);t.anisotropy=8;return new THREE.MeshStandardMaterial({map:t,roughness:.75})}catch(e){return M(0x9a8264)}})();
@@ -153,7 +153,7 @@ const WALLS=[];const borderG=new THREE.Group();g4.add(borderG);borderG.visible=f
 // ===== NICCHIE ad arco ricavate nello spessore del muro (lato stanza) =====
 // (px,py) centro sul filo del muro lato stanza; th rotazione (+z locale entra nel muro); w larghezza nicchia; cw larghezza tratto di muro sostituito; z0 fondo, zr imposta arco (m); dep profondita'; tt spessore muro
 const mNicTint=new THREE.MeshLambertMaterial({color:0xf0e2c4,emissive:0x6a6048,side:THREE.DoubleSide}),mNicFrame=new THREE.MeshStandardMaterial({color:0xc8ad82,roughness:.95}),nTerra=M(0xb5653f),nTerra2=M(0x8f4a2e),nCer=M(0xe9dfca),nVetro=M(0x4f7a52),nFoglia=M(0x4f8a3c);
-function nicchia(px,py,th,w,cw,z0,zr,dep,tt,mat,items){
+function nicchia(px,py,th,w,cw,z0,zr,dep,tt,mat,items,tgt){
 const g=new THREE.Group();g.position.set(px*S,0,py*S);g.rotation.y=th;
 const wS=w*S,cS=cw*S,r=wS/2,dS=dep*S,tS=tt*S,fm=.045;
 const arc=(P,rr,y0)=>{P.moveTo(-rr,y0);P.lineTo(rr,y0);P.lineTo(rr,zr);P.absarc(0,zr,rr,0,PI,false);P.lineTo(-rr,y0);return P};
@@ -173,7 +173,7 @@ else if(t==='bowl')add(new THREE.CylinderGeometry(.085,.05,.06,16),nCer,.03);
 else if(t==='bot'){add(new THREE.CylinderGeometry(.03,.03,.2,12),nVetro,.1);add(new THREE.CylinderGeometry(.012,.02,.08,10),nVetro,.24)}
 else if(t==='plant'){add(new THREE.CylinderGeometry(.05,.04,.09,12),nTerra2,.045);const f=new THREE.Mesh(new THREE.SphereGeometry(.09,10,8),nFoglia);f.position.y=.16;f.scale.y=.8;o.add(f)}
 o.scale.setScalar(k);o.position.set(u*k/k,z0+.035+(e||0),dS*.55);g.add(o)});
-w4.add(g)}
+(tgt||w4).add(g)}
 // ===== ATTICO =====
 cur=g4;
 poly([[38,105],[170,105],[170,40],[268,40],[268,125],[345,125],[345,115],[692,115],[692,15],[1050,15],[1050,222],[945,222],[945,485],[318,485],[318,380],[38,380]],0,mCotto);
@@ -190,11 +190,16 @@ box(268,40,345,125,0,H,mWall);
 nicchia(45,134,-PI/2,26,34,1.3,1.88,6,14,mPer,[['jug',-.06],['bot',.07]]);
 nicchia(45,178,-PI/2,26,34,1.3,1.88,6,14,mPer,[['bowl',0],['bowl',0,.06]]);
 nicchia(45,277,-PI/2,18,26,1.3,1.85,6,14,mPer,[['plant',0]]);
-nicchia(196,112.5,PI,26,36,1.2,1.8,3.5,7,mWall,[]);
-[[170,109,268,109,[[8,44,'v'],[52,93,'d']]],[692,15,692,222,[[155,200,'d']]],[692,160,795,160,[[45,95,'d']]],[795,15,795,222,[[160,208,'d']]],
+var wS=new THREE.Group(),wK=new THREE.Group(),dSk=[];w4.add(wS,wK);wK.visible=false;
+{const pc=cur;cur=wS;wall(170,109,268,109,7,mWall,[[8,44,'v'],[52,93,'d']]);cur=pc;WALLS.push([170,109,268,109,7,[[8,44,'v'],[52,93,'d']]])}
+nicchia(196,112.5,PI,26,36,1.2,1.8,3.5,7,mWall,[],wS);
+// BAGNO IN CUCINA AD L: la parete con nicchia e porta si sposta verso l'isola (y 109 -> 182), lato ovest prolungato, gamba verso l'arco
+{const pc=cur;cur=wK;wall(173.5,105,173.5,182,7,mWall,[]);wall(170,182,320,182,7,mWall,[[8,44,'v']]);cur=pc}
+nicchia(196,185.5,PI,26,36,1.2,1.8,3.5,7,mWall,[],wK);
+[[692,15,692,222,[[155,200,'d']]],[692,160,795,160,[[45,95,'d']]],[795,15,795,222,[[160,208,'d']]],
 [722,222,722,485,[[15,65,'d']]],[655,222,655,382],[655,382,722,382],[560,222,945,222,[[25,75,'d'],[180,230,'d']]]]
 .forEach(w=>wall(w[0],w[1],w[2],w[3],7,mWall,w[4]||[]));
-arch(320,125,285,.3,2.4,1.45,true);
+var archS=arch(320,125,285,.3,2.4,1.45,true),archK=arch(320,125,285,1.15,2.5,1.45,true,false,[.085,.782]);archK.visible=false;
 arch(560,222,485,1.24,3.2,1.5,true,true);
 [[20,380,20,575],[20,575,318,575],[318,575,318,485]].forEach(w=>{const L=Math.hypot(w[2]-w[0],w[3]-w[1]),n=Math.max(1,Math.round(L/110)),gs=[];
 for(let i=0;i<n;i++)gs.push([i*L/n+3,(i+1)*L/n-3,'g']);wall(w[0],w[1],w[2],w[3],6,mFr,gs,2.7)});
@@ -559,6 +564,23 @@ box(232,48.4,256,52,0,1.15,wh);box(238,52,250,52.8,.85,1.0,dk2);box(234.5,52,253
 tl(253,70,a2,98,0,.82);box(255,74,266,94,.82,.94,wh);box(256,75.5,265,92.5,.935,.945,wh2);box(265.5,83,267.5,85,.94,1.14,ch);box(256,83,267.5,85,1.12,1.15,ch);
 box(266.4,72,268,96,1.2,2.05,mir);box(266.4,65,268,69,1.95,2.15,lt);box(266.4,99,268,103,1.95,2.15,lt);
 cur=pcK;[55,75,95].forEach(y=>box(a1,y-4,a2,y+4,2.62,2.79,bm))}
+// BAGNO IN CUCINA AD L (opzione "In cucina"): stessa dotazione di prima + gamba lungo il blocco verso l'arco, porta sulla parete a destra dell'ingresso
+var bathL;{const pcL=cur;bathL=new THREE.Group();cur.add(bathL);cur=bathL;bathL.visible=false;
+const a1=177,a2=268,b1=47,bs=178.5,ex=316.5,by=125;
+poly([[a1,b1],[a2,b1],[a2,by],[ex,by],[ex,bs],[a1,bs]],.035,mCotto);
+tl(a1,b1,a1+1.4,bs,0,2.2);tl(a1,b1,a2,b1+1.4,0,2.2);tl(a2-1.4,b1,a2,by,0,2.2);tl(a2,by,ex,by+1.4,0,2.2);
+tl(ex-1.4,by,ex,130,0,2.2);tl(ex-1.4,171,ex,bs,0,2.2);tl(a1,bs-1.4,ex,bs,0,2.2);
+tl(a1,b1,222,105.5,.035,.07);box(221.5,b1,222.5,93,.07,2.0,mGlass);box(221,b1,223,93,1.98,2.0,ch);
+box(178.5,76,190,78,2.08,2.1,ch);disc(190,77,2.04,.13);
+box(232,48.4,256,52,0,1.15,wh);box(238,52,250,52.8,.85,1.0,dk2);box(234.5,52,253.5,80,.3,.42,wh);box(236,53.5,252,79,.42,.45,wh);
+tl(253,70,a2,98,0,.82);box(255,74,266,94,.82,.94,wh);box(256,75.5,265,92.5,.935,.945,wh2);box(265.5,83,267.5,85,.94,1.14,ch);box(256,83,267.5,85,1.12,1.15,ch);
+box(266.4,72,268,96,1.2,2.05,mir);box(266.4,65,268,69,1.95,2.15,lt);box(266.4,99,268,103,1.95,2.15,lt);
+// secondo lavabo con specchio sul lato corto della L (parete nord della gamba)
+sbox(282,by+1.4,306,146,0,.82,camWood,1);box(286,129,302,143,.82,.94,wh);box(287,130.5,301,141.5,.935,.945,wh2);box(293,by+1.4,295,128.5,.94,1.14,ch);box(293,by+1.4,295,138,1.12,1.15,ch);
+box(283,by,305,by+1.6,1.2,2.05,mir);box(277,by,281,by+1.6,1.95,2.15,lt);box(307,by,311,by+1.6,1.95,2.15,lt);
+// armadietto portasciugamani in legno sul lato ovest
+sbox(a1+1.4,148,a1+17,176,0,1.9,camWood,1);[.5,1.0,1.5].forEach((z,i)=>box(a1+17,150,a1+18.2,174,z,z+.05,M([0xe8e0d0,0xc9d6c6,0xe8e0d0][i])));
+cur=pcL;[55,75,95,150].forEach(y=>box(a1,y-4,y===150?ex:a2,y+4,2.62,2.79,bm))}
 // DISPENSA (alternativa al bagno in cucina): scaffalature in legno su tre lati con barattoli e scatole
 var dispG=new THREE.Group();cur.add(dispG);dispG.visible=false;
 {const pcD=cur;cur=dispG;poly([[177,47],[268,47],[268,105.5],[177,105.5]],.035,mCotto);
@@ -591,12 +613,13 @@ add(new THREE.BoxGeometry(Wm,2.12,.045),mDoor,d*Wm/2,1.09,0);
 [.32,1.8].forEach(h=>{add(new THREE.BoxGeometry(Wm*.5,.055,.008),mIron,d*Wm*.25,h,sd*.0385);for(let i=0;i<5;i++)add(new THREE.SphereGeometry(.011,6,6),mIron,d*(.05+i*.1),h,sd*.0425)});
 add(new THREE.BoxGeometry(.045,.14,.008),mIron,d*(Wm-.09),1.0,sd*.0265);add(new THREE.TorusGeometry(.036,.005,8,16),mIron,d*(Wm-.09),.97,sd*.036)});
 const sl=axis==='x'?swW:-swW;hg.userData={open:-sl*d*1.45};DOORS.push(hg);doorsG.add(outer)};
-porta('x',222,263,109,'a',1);   // bagno zona giorno, spostato nel quadrato a nord (apre verso la cucina)
+{const n0=doorsG.children.length;porta('x',222,263,109,'a',1);dSk=doorsG.children.slice(n0)}   // bagno zona giorno, spostato nel quadrato a nord (apre verso la cucina)
 porta('x',737,787,160,'a',-1);  // bagno zona notte
 porta('x',740,790,222,'b',1);   // camera 1
 porta('y',175,223,795,'b',1);   // camera 2
 porta('x',585,635,222,'a',1);   // studio
 porta('y',170,215,692,'b',-1);  // porta del corridoio verso camere e bagno grande
+{const n0=doorsG.children.length;porta('y',130,171,320,'b',-1);doorsG.children.slice(n0).forEach(o=>wK.add(o))}
 // BAGNO IN SALONE (opzione): a sinistra dell'ingresso, di fronte alla vetrata; stessa dotazione del bagno in cucina, ruotata di 180 gradi
 const bsG=new THREE.Group();w4.add(bsG);bsG.visible=false;let bathS;var curStair=7,bgOn=false;
 {const pcB=cur;cur=bsG;
@@ -605,7 +628,7 @@ porta('x',508,549,173.5,'a',1);bsG.add(doorsG.children[doorsG.children.length-1]
 bathS=bathK.clone(true);const sz=48/58.5,nt=bathS.children.find(c=>c.geometry&&c.geometry.parameters&&Math.abs(c.geometry.parameters.width-91*S)<.01&&Math.abs(c.geometry.parameters.depth-1.4*S)<.01);
 if(nt){bathS.remove(nt);[[179.5,5],[245.5,45]].forEach(([cx,w])=>{const c=nt.clone();c.scale.x=w/91;c.position.x=m(cx);bathS.add(c)})}
 bathS.scale.set(1,1,sz);bathS.position.set(m(508.5)-m(222.5),0,m(146)-sz*m(76.25));bathS.visible=false;bathK.parent.add(bathS)}
-var setBagno=function(k){bgOn=k===1;bathK.visible=k===0;dispG.visible=k===1;bsG.visible=k===1;bathS.visible=k===1;bg0.classList.toggle('on',k===0);bg1.classList.toggle('on',k===1);if(k===1&&curStair!==7)setStair(7)};
+var setBagno=function(k){bgOn=k===1;bathK.visible=false;bathL.visible=k===0;wS.visible=k===1;wK.visible=k===0;archS.visible=k===1;archK.visible=k===0;dSk.forEach(o=>o.visible=k===1);dispG.visible=k===1;bsG.visible=k===1;bathS.visible=k===1;bg0.classList.toggle('on',k===0);bg1.classList.toggle('on',k===1);if(k===1&&curStair!==7)setStair(7)};
 bg0.onclick=()=>setBagno(0);bg1.onclick=()=>setBagno(1);
 }
 function setDoors(o){DOORS.forEach(h=>{h.rotation.y=o?h.userData.open:0});dr0.classList.toggle('on',!o);dr1.classList.toggle('on',!!o)}
